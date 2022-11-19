@@ -12,6 +12,8 @@ setwd(matrices)
 ####Loading libraries####
 #########################
 
+cat("Loading libraries...")
+
 library(ggplot2); library(dplyr); library(RColorBrewer);library(rafalib); library(sva); library(biomaRt)
 
 #################
@@ -19,12 +21,8 @@ library(ggplot2); library(dplyr); library(RColorBrewer);library(rafalib); librar
 #################
 
 filenames = list.files()
-print(filenames)
-
 expr_matrix_fc <- read.csv2(filenames[[1]], header = T)
-
 rownames(expr_matrix_fc) <- make.names(expr_matrix_fc$X, unique = T)
-
 expr_matrix_fc <- expr_matrix_fc[, -1]
 
 samplesheet <- read.csv2(samplesheet, header = T)
