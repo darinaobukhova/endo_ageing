@@ -22,30 +22,30 @@ source(as.character(config))
 
 #' Libraries
 
-library(ggplot2); library(cowplot); library(reshape2)
+library(ggplot2); library(cowplot); library(reshape2); library(tidyverse)
 
 #' Loading the data and subsetting 
 
-genes_of_interest <- read.csv2("/Users/darinaobukhova/projects/Endometrial_Ageing/reanalysis_070622/results_DEG/all_samples/allsamp_sign_DEGs_receptivityadj_named.csv")
-load("/Users/darinaobukhova/projects/Endometrial_Ageing/deconvolution/data/C1/normalized/C1_transformed.RData")
-C1_labels <- read.csv("/Users/darinaobukhova/projects/Endometrial_Ageing/deconvolution/data/C1/GSE111976_summary_C1_day_donor_ctype.csv", 
-                      header = T)
-
+genes_of_interest <- read.csv2(DEG_bulk)
+load(C1_dataset_transformed)
+C1_labels <- read.csv(C1_labels, header = T)
 gene_names <- genes_of_interest$gene_s
 features <- rownames(C1_sce@assays@data@listData$shifted_log_transform)[which(rownames(C1_sce@assays@data@listData$shifted_log_transform) %in% gene_names)]
 
-#Remove Day9
-C1_labels_order <- C1_labels[!C1_labels$day == "9",]
+#' Remove Day9 as it doesn't have some of the cell types
+#' indetified
+
+C1_labels_order <- C1_labels[!C1_labels$day == "9",] 
 C1_labels_order <- C1_labels_order[order(C1_labels_order$day),]
 
-#Subsetting for genes of interest
+#' Subsetting for genes of interest
 C1_sce_subset <- C1_sce[,colnames(C1_sce@assays@data@listData$shifted_log_transform) %in% C1_labels_order$X]
 C1_sce_subset <- C1_sce_subset[rownames(C1_sce@assays@data@listData$shifted_log_transform) %in% features,]
-
 idx <- match(colnames(C1_sce_subset@assays@data@listData$shifted_log_transform), C1_labels_order$cell_name)
 C1_sce_subset_ord <- C1_sce_subset@assays@data@listData$shifted_log_transform[,order(idx)]
 print(all(colnames(C1_sce_subset_ord) == C1_labels_order$cell_name))
 
+#' Transforming the C1 subsetted df for futher plotting
 
 C1_sce_subset_ord <- as.data.frame(t(as.matrix(C1_sce_subset_ord)))
 C1_sce_subset_ord$Cell <- C1_labels_order$cell_name
@@ -62,12 +62,13 @@ a <- ggplot(C1_sce_subset_ord_r[C1_sce_subset_ord_r$Feat %in% features[1:12],], 
   facet_grid(rows = vars(Feat), scales = "free", switch = "y") +
   theme_cowplot(font_size = 12) +
   theme(panel.spacing = unit(0, "lines"),
+        panel.spacing.y = unit(0.2, "cm"),
         plot.title = element_text(hjust = 0.5),
         panel.background = element_rect(fill = NA, color = "black"),
         strip.background = element_blank(),
-        strip.text = element_text(face = "bold"),
+        strip.text = element_text(face = "bold.italic"),
         strip.text.y.left = element_text(angle = 0))+
-  labs(x="Day after onset of menstrual bleeding", y="Expression level", fill="Cell type")+
+  labs(x="Day after onset of menstrual bleeding", y="Expression", color="Cell type")+
   scale_color_manual(values=c("indianred3", "mediumseagreen", "mediumslateblue", "cyan", "#8B008B", "gray27"))
 a
 dev.off()
@@ -85,7 +86,7 @@ b <- ggplot(C1_sce_subset_ord_r[C1_sce_subset_ord_r$Feat %in% features[13:24],],
         strip.background = element_blank(),
         strip.text = element_text(face = "bold"),
         strip.text.y.left = element_text(angle = 0))+
-  labs(x="Day after onset of menstrual bleeding", y="Expression level", fill="Cell type")+
+  labs(x="Day after onset of menstrual bleeding", y="Expression", color="Cell type")+
   scale_color_manual(values=c("indianred3", "mediumseagreen", "mediumslateblue", "cyan", "#8B008B", "gray27"))
 b
 dev.off()
@@ -103,7 +104,7 @@ c <- ggplot(C1_sce_subset_ord_r[C1_sce_subset_ord_r$Feat %in% features[25:37],],
         strip.background = element_blank(),
         strip.text = element_text(face = "bold"),
         strip.text.y.left = element_text(angle = 0))+
-  labs(x="Day after onset of menstrual bleeding", y="Expression level", fill="Cell type")+
+  labs(x="Day after onset of menstrual bleeding", y="Expression", color="Cell type")+
   scale_color_manual(values=c("indianred3", "mediumseagreen", "mediumslateblue", "cyan", "#8B008B", "gray27"))
 c
 dev.off()
@@ -121,15 +122,90 @@ d <- ggplot(C1_sce_subset_ord_r[C1_sce_subset_ord_r$Feat %in% features[38:50],],
         strip.background = element_blank(),
         strip.text = element_text(face = "bold"),
         strip.text.y.left = element_text(angle = 0))+
-  labs(x="Day after onset of menstrual bleeding", y="Expression level", fill="Cell type")+
+  labs(x="Day after onset of menstrual bleeding", y="Expression", color="Cell type")+
   scale_color_manual(values=c("indianred3", "mediumseagreen", "mediumslateblue", "cyan", "#8B008B", "gray27"))
 d
 dev.off()
 
-united_plot <- plot_grid(a, b, c, d, ncol=2, labels="AUTO")
+#' Minor modifications such as the removal of y axis label in 2 plots
+#' and removal of legend annotation in all plots to plot and adjust it separately
+
+a <- ggplot(C1_sce_subset_ord_r[C1_sce_subset_ord_r$Feat %in% features[1:12],], aes(factor(Day), Expr)) +
+  scale_x_discrete(guide = guide_axis(angle = 45)) +
+  scale_y_continuous(expand = c(0, 0), position="right")+
+  geom_jitter(aes(colour=Cell_type), alpha = 0.7, size = 1.5, position = position_dodge2(width=0.75))+
+  facet_grid(rows = vars(Feat), scales = "free", switch = "y") +
+  theme_cowplot(font_size = 12) +
+  theme(panel.spacing = unit(0, "lines"),
+        panel.spacing.y = unit(0.2, "cm"),
+        plot.title = element_text(hjust = 0.5),
+        panel.background = element_rect(fill = NA, color = "black"),
+        strip.background = element_blank(),
+        strip.text = element_text(face = "bold.italic"),
+        strip.text.y.left = element_text(angle = 0),
+        legend.position = "none")+
+  labs(x=NULL, y=NULL, color="Cell type")+
+  scale_color_manual(values=c("indianred3", "mediumseagreen", "mediumslateblue", "cyan", "#8B008B", "gray27"))
+a
+
+b <- ggplot(C1_sce_subset_ord_r[C1_sce_subset_ord_r$Feat %in% features[13:24],], aes(factor(Day), Expr)) +
+  scale_x_discrete(guide = guide_axis(angle = 45)) +
+  scale_y_continuous(expand = c(0, 0), position="right")+
+  geom_jitter(aes(colour=Cell_type), alpha = 0.7, position = position_dodge2(width=0.75))+
+  facet_grid(rows = vars(Feat), scales = "free", switch = "y") +
+  theme_cowplot(font_size = 12) +
+  theme(panel.spacing = unit(0, "lines"),
+        panel.spacing.y = unit(0.2, "cm"),
+        plot.title = element_text(hjust = 0.5),
+        panel.background = element_rect(fill = NA, color = "black"),
+        strip.background = element_blank(),
+        strip.text = element_text(face = "bold.italic"),
+        strip.text.y.left = element_text(angle = 0),
+        legend.position = "none")+
+  labs(x=NULL, y="Expression", color="Cell type")+
+  scale_color_manual(values=c("indianred3", "mediumseagreen", "mediumslateblue", "cyan", "#8B008B", "gray27"))
+b
+
+c <- ggplot(C1_sce_subset_ord_r[C1_sce_subset_ord_r$Feat %in% features[25:37],], aes(factor(Day), Expr)) +
+  scale_x_discrete(guide = guide_axis(angle = 45)) +
+  scale_y_continuous(expand = c(0, 0), position="right")+
+  geom_jitter(aes(colour=Cell_type), alpha = 0.7, position = position_dodge2(width=0.75))+
+  facet_grid(rows = vars(Feat), scales = "free", switch = "y") +
+  theme_cowplot(font_size = 12) +
+  theme(panel.spacing = unit(0, "lines"),
+        panel.spacing.y = unit(0.2, "cm"),
+        plot.title = element_text(hjust = 0.5),
+        panel.background = element_rect(fill = NA, color = "black"),
+        strip.background = element_blank(),
+        strip.text = element_text(face = "bold.italic"),
+        strip.text.y.left = element_text(angle = 0),
+        legend.position = "none")+
+  labs(x="Day after onset of menstrual bleeding", y=NULL, color="Cell type")+
+  scale_color_manual(values=c("indianred3", "mediumseagreen", "mediumslateblue", "cyan", "#8B008B", "gray27"))
+c
+
+d <- ggplot(C1_sce_subset_ord_r[C1_sce_subset_ord_r$Feat %in% features[38:50],], aes(factor(Day), Expr)) +
+  scale_x_discrete(guide = guide_axis(angle = 45)) +
+  scale_y_continuous(expand = c(0, 0), position="right")+
+  geom_jitter(aes(colour=Cell_type), alpha = 0.7, position = position_dodge2(width=0.75))+
+  facet_grid(rows = vars(Feat), scales = "free", switch = "y") +
+  theme_cowplot(font_size = 12) +
+  theme(panel.spacing = unit(0, "lines"),
+        panel.spacing.y = unit(0.2, "cm"),
+        plot.title = element_text(hjust = 0.5),
+        panel.background = element_rect(fill = NA, color = "black"),
+        strip.background = element_blank(),
+        strip.text = element_text(face = "bold.italic"),
+        strip.text.y.left = element_text(angle = 0), 
+        legend.position = "none")+
+  labs(x="Day after onset of menstrual bleeding", y="Expression", color="Cell type")+
+  scale_color_manual(values=c("indianred3", "mediumseagreen", "mediumslateblue", "cyan", "#8B008B", "gray27"))
+d
+
+united_plot <- plot_grid(a, b, c, d, ncol=2, labels=c("a", "b", "c", "d"))
 
 ggsave(filename = paste0(output_dir,"/sc_markers_unitedplot_allsamp.pdf"), 
-       plot = united_plot, width = 90, height = 70 , units = "cm")
+       plot = united_plot, width = 40, height = 30 , units = "cm")
 
 #Genes of interest during WOI
 
