@@ -22,7 +22,7 @@ source(as.character(config))
 
 #' Libraries
 
-library(ggplot2); library(cowplot)
+library(ggplot2); library(cowplot); library(reshape2)
 
 #' Loading the data and subsetting 
 
