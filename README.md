@@ -1,3 +1,3 @@
-# endo_ageing
+# Endometrial ageing 
 
-Code for the analyses used in the study on the ageing of endometrium.
+Scripts and notebooks for the analyses used in our paper _Aging affects ciliated cells development in human endometrial epithelium_.
