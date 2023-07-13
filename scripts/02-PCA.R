@@ -8,62 +8,36 @@ set.seed(10)
 
 setwd(matrices)
 
-#########################
-####Loading libraries####
-#########################
+# Load Libraries
 
-cat("Loading libraries...")
+library(ggplot2)
+library(dplyr)
+library(RColorBrewer)
+library(rafalib)
 
-library(ggplot2); library(dplyr); library(RColorBrewer);library(rafalib); library(sva); library(biomaRt)
 
-#################
-####Filtering####
-#################
+# Load objects
 
-filenames = list.files()
-expr_matrix_fc <- read.csv2(filenames[[1]], header = T)
-rownames(expr_matrix_fc) <- make.names(expr_matrix_fc$X, unique = T)
-expr_matrix_fc <- expr_matrix_fc[, -1]
+load(expr_matrices)
 
-samplesheet <- read.csv2(samplesheet, header = T)
-
-samplesheet <- samplesheet[order(match(samplesheet[,2], colnames(expr_matrix_fc))), ]
-print(all(samplesheet[,2] == colnames(expr_matrix_fc)))
-
-#----Batch correction----#
-
-cat("Performing Batch Correction...")
-
-batch <- samplesheet[,5]
-group <- samplesheet[,3]
-
-corrected_data_fc <- ComBat_seq(as.matrix(expr_matrix_fc), batch=batch, group=group)
-
-save(corrected_data_fc, file=paste0(cor_data, "/corrected_countdata_fc_allsamp.RData"))
-
-#----Analysis on uncorrected data----#
-
-cat("Performing EDA on uncorrected data...")
+# PCA on the uncorrected data
 
 dir.create(output_dir_eda)
 
-#----Remove rows where all values are zeros----#
-
-expr_matrix_fc_filtered <- expr_matrix_fc[rowSums(expr_matrix_fc[]) > 0, ]
-
-#----Remove rows where values are >=5 in >75% samples----#
+# Remove rows where values are >=5 in >75% samples
 
 expr_matrix_fc_filtered <- expr_matrix_fc_filtered[rowSums(expr_matrix_fc_filtered >= 5) >= round(ncol(expr_matrix_fc_filtered)/100 * 75),]
 
 expr_matrix_fc_filtered <- expr_matrix_fc_filtered + 1
 expr_matrix_fc_filtered_log <- log2(expr_matrix_fc_filtered)
 
-pcDat = prcomp(as.matrix(t(expr_matrix_fc_filtered_log)), scale = F, center = T)
+pcDat <- prcomp(as.matrix(t(expr_matrix_fc_filtered_log)), scale = F, center = T)
 var_explained <- pcDat$sdev^2/sum(pcDat$sdev^2)
 
 pdf(file=paste0(output_dir_eda, "/fc_uncorrected_allsamp_PCA_labeled.pdf"), height=7, width=9)
 
-#Trim rownames for a cleaner appearance on a plot 
+# Trim rownames for a cleaner appearance on a plot
+ 
 theme_set(theme_bw())
 pcDat$x %>% 
   as.data.frame() %>% 
@@ -81,20 +55,12 @@ pcDat$x %>%
 
 dev.off()
 
-cat("Performing EDA on corrected data...")
-
-#----Remove rows where all values are zeros----#
-
-corrected_data_fc_filtered <- corrected_data_fc[rowSums(corrected_data_fc[]) > 0, ]
-
-#----Remove rows where values are >=5 in >75% samples----#
-
-corrected_data_fc_filtered <- corrected_data_fc_filtered[rowSums(corrected_data_fc_filtered >= 5) >= round(ncol(corrected_data_fc_filtered)/100 * 75),]
+# PCA on the batch-corrected data 
 
 corrected_data_fc_filtered <- corrected_data_fc_filtered + 1
 corrected_data_fc_filtered_log <- log2(corrected_data_fc_filtered)
 
-pcDat = prcomp(as.matrix(t(corrected_data_fc_filtered_log)), scale = F, center = T)
+pcDat <- prcomp(as.matrix(t(corrected_data_fc_filtered_log)), scale = F, center = T)
 var_explained <- pcDat$sdev^2/sum(pcDat$sdev^2)
 
 pdf(file=paste0(output_dir_eda, "/fc_corrected_allsamp_PCA_labeled.pdf"), height=7, width=9)

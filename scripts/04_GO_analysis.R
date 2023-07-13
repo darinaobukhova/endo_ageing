@@ -4,12 +4,15 @@ args <- commandArgs(TRUE)
 config <- args[1]
 source(as.character(config))
 
-#########################
-####Loading libraries####
-#########################
+# Loading packages
 
-library(RColorBrewer); library(enrichplot); library(clusterProfiler.dplyr); library(DOSE); 
-library(gprofiler2); library(ggplot2)
+library(dplyr)
+library(RColorBrewer)
+library(enrichplot)
+library(clusterProfiler)
+library(DOSE) 
+library(gprofiler2)
+library(ggplot2)
 
 load(paste0(output_dir_deg, "/datProbes.RData"))
 

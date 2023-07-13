@@ -6,8 +6,13 @@ source(as.character(config))
 
 #' Loading libraties
 
-library(sva); library(biomaRt); library(DESeq2); library(pheatmap);
-library(ggplot2); library(dplyr); library(RColorBrewer); library(rafalib); 
+library(biomaRt)
+library(DESeq2)
+library(pheatmap)
+library(ggplot2)
+library(dplyr)
+library(RColorBrewer)
+library(rafalib) 
 
 #' Loading files
 
