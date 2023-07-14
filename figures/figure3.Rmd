@@ -1,0 +1,208 @@
+---
+title: "Endometrial Ageing Paper: Figure 3"
+author: "Darina Obukhova"
+date: "Last compiled on `r format(Sys.time(), '%d %B, %Y')`"
+output:
+  BiocStyle::html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+---
+
+```{r, setup-options, include=FALSE}
+randseed <- 9078
+knitr::opts_chunk$set(
+  echo = TRUE, warning = FALSE, message = FALSE, out.width = "100%", fig.align = "center",
+  cache = TRUE, cache.extra = randseed
+)
+```
+
+## Package Loading 
+
+```{r}
+library(here)
+library(readxl)
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(ggpubr)
+library(patchwork)
+```
+
+## Data loading
+
+```{r}
+#Function for loading the data from all excel sheets
+
+#Later Move to utils.R
+read_excel_allsheets <- function(filename, tibble = FALSE) {
+    sheets <- readxl::excel_sheets(filename)
+    x <- lapply(sheets, function(X) readxl::read_excel(filename, col_names = TRUE, sheet = X))
+    if(!tibble) x <- lapply(x, as.data.frame)
+    names(x) <- sheets
+    x
+}
+
+IHC_staining <- read_excel_allsheets("~/projects/Endometrial_Ageing/figures/data/IHC_combined.xlsx")
+qPCR <- readxl::read_xlsx("~/projects/Endometrial_Ageing/figures/data/qPCR_combined.xlsx")
+colnames(qPCR) <- c("Sample", "Group", "Target", "Ct")
+qPCR$Group <- factor(qPCR$Group, levels=c('YMA', 'AMA'))
+llhs28_bb <- readxl::read_xlsx("~/projects/Endometrial_Ageing/figures/data/Lhs28_per_LE_area.xlsx",
+                               sheet = 10)
+
+outputdir <- "~/projects/Endometrial_Ageing/figures/"
+
+```
+
+
+```{r}
+IHC_staining_p16_long <- IHC_staining$p16INK4A %>% 
+  dplyr::group_by(Group) %>% 
+  tidyr::pivot_longer(cols = LE:Stroma, names_to = c("cell_type"),
+                      values_to = c("intensity"))
+
+IHC_staining_p16_long$Group <- factor(IHC_staining_p16_long$Group, levels=c('YMA', 'AMA'))
+
+
+p16 <- ggpubr::ggbarplot(IHC_staining_p16_long, 
+                  x = "cell_type", y = "intensity", 
+                  fill = "Group", palette = c("darkorchid4", "darkorange2"),
+                  add = c("mean_se"),
+                  position = position_dodge(0.7))+
+  ggtitle("p16INK4A") +
+  #geom_bar(position="dodge", stat="summary", fun="mean")+
+  #scale_fill_manual(values = c("darkorchid4", "darkorange2")) +
+  labs(y = "Average signal intensity", x = NULL) +
+  theme(aspect.ratio = 1.2,
+        panel.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(angle = 30, vjust = 0.8, hjust = 0.5, size = 10),
+        plot.title = element_text(face = "bold"))
+
+p16 + border()
+
+ggsave(paste0(outputdir, "Figure3_IHC_combined_p16.pdf"), plot = last_plot(),
+       dpi = 300)
+
+IHC_staining_stc1_long <- IHC_staining$STC1 %>% 
+  dplyr::group_by(Group) %>% 
+  tidyr::pivot_longer(cols = LE:Stroma, names_to = c("cell_type"),
+                      values_to = c("intensity"))
+
+IHC_staining_stc1_long$Group <- factor(IHC_staining_stc1_long$Group, levels=c('YMA', 'AMA'))
+
+
+stc1 <- ggpubr::ggbarplot(IHC_staining_stc1_long, 
+                  x = "cell_type", y = "intensity", 
+                  fill = "Group", palette = c("darkorchid4", "darkorange2"),
+                  add = c("mean_se"),
+                  position = position_dodge(0.7))+
+  ggtitle("STC1") +
+  #geom_bar(position="dodge", stat="summary", fun="mean")+
+  #scale_fill_manual(values = c("darkorchid4", "darkorange2")) +
+  labs(y = "Average signal intensity", x = NULL) +
+  theme(aspect.ratio = 1.2,
+        panel.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(angle = 30, vjust = 0.8, hjust = 0.5, size = 10),
+        plot.title = element_text(face = "bold"))
+
+stc1 + border()
+
+ggsave(paste0(outputdir, "Figure3_IHC_combined_stc1.pdf"), plot = last_plot(),
+       dpi = 300)
+
+IHC_staining_c2c_long <- IHC_staining$C2CD4B %>% 
+  dplyr::group_by(Group) %>% 
+  tidyr::pivot_longer(cols = LE:Stroma, names_to = c("cell_type"),
+                      values_to = c("intensity"))
+
+IHC_staining_c2c_long$Group <- factor(IHC_staining_c2c_long$Group, levels=c('YMA', 'AMA'))
+
+
+c2c <- ggpubr::ggbarplot(IHC_staining_c2c_long, 
+                  x = "cell_type", y = "intensity", 
+                  fill = "Group", palette = c("darkorchid4", "darkorange2"),
+                  add = c("mean_se"),
+                  position = position_dodge(0.7))+
+  ggtitle("C2CD4B") +
+  #geom_bar(position="dodge", stat="summary", fun="mean")+
+  #scale_fill_manual(values = c("darkorchid4", "darkorange2")) +
+  labs(y = "Average signal intensity", x = NULL) +
+  theme(aspect.ratio = 1.2,
+        panel.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_text(angle = 30, vjust = 0.8, hjust = 0.5, size = 10),
+        plot.title = element_text(face = "bold"))
+
+c2c + border()
+
+ggsave(paste0(outputdir, "Figure3_IHC_combined_c2c.pdf"), plot = last_plot(),
+       dpi = 300)
+
+
+combined <- p16 + border() + stc1 + border() + c2c + border() #& theme(legend.position = "bottom")
+
+combined + patchwork::plot_layout(guides = "collect") + patchwork::plot_annotation(tag_levels = 'a')
+
+
+ggsave(paste0(outputdir, "IHC_combined_plot.pdf"), plot = last_plot(),
+       dpi = 300)
+
+```
+
+
+```{r}
+
+
+qPCR_markers_plt <- ggplot(data = qPCR, aes(x=Target, y = Ct, fill=Group))+
+  stat_boxplot(geom = 'errorbar', width = 0.6) +
+  geom_boxplot(width = 0.6) +
+  scale_fill_manual(values = c("darkorchid4", "darkorange2"))+
+  labs(x=NULL, ylab="-ΔCт")+
+  geom_jitter(width=0.25, alpha = 0.2) +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        legend.title = element_blank())
+
+qPCR_markers_plt + facet_wrap(. ~ Target, ncol=3, scales = "free") + 
+  theme(strip.background = element_blank(), strip.text.x = element_text(size=12, face="italic"))
+
+ggsave(paste0(outputdir, "qPCR_combined_plot.pdf"), plot = last_plot(),
+       dpi = 300)
+
+```
+
+
+```{r}
+
+llhs28_bb$Group <- factor(llhs28_bb$Group, levels=c('YMA', 'AMA'))
+
+llhs28_markers_plt <- ggplot(data = llhs28_bb, aes(x=Group, y = Value, fill=Group))+
+  stat_boxplot(geom = 'errorbar', width = 0.6) +
+  geom_boxplot(width = 0.6) +
+  labs(x=NULL, y="Average BB count per LE area") +
+  scale_fill_manual(values = c("darkorchid4", "darkorange2"))+
+  geom_jitter(width=0.25, alpha = 0.2) +
+  theme(aspect.ratio = 1.5,
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        legend.title = element_blank())
+  
+  
+
+llhs28_markers_plt
+
+ggsave(paste0(outputdir, "BBcountLE_combined_plot.pdf"), plot = last_plot(),
+       dpi = 300)
+
+
+```
+

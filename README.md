@@ -10,4 +10,5 @@ The _align_count_workflow directory_ contains a snakemake workflow for mapping t
 
 # Data analysis and vizualization 
 
+1. [Combining expression count matrix for each sample in one joint expression count matrix and processing:]
 
