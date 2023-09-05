@@ -19,12 +19,12 @@ library(rafalib)
 load(corrected_data)
 
 samplesheet <- read.csv2(samplesheet, header = T)
-samplesheet <- samplesheet[order(match(samplesheet[,2], colnames(corrected_data_fc))), ]
-print(all(samplesheet[,2] == colnames(corrected_data_fc)))
+samplesheet <- samplesheet[order(match(samplesheet[,2], colnames(corrected_data))), ]
+print(all(samplesheet[,2] == colnames(corrected_data)))
 
 #' Filtering
 
-corrected_data_fc_filtered <- corrected_data_fc[rowSums(corrected_data_fc[]) > 0, ]
+corrected_data_fc_filtered <- corrected_data[rowSums(corrected_data[]) > 0, ]
 #' Remove rows where values are >=5 in >75% samples
 corrected_data_fc_filtered <- corrected_data_fc_filtered[rowSums(corrected_data_fc_filtered  >= 5) >= round(ncol(corrected_data_fc_filtered)/100 * 75),]
 
