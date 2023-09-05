@@ -42,7 +42,7 @@ dds <- DESeq(dds_fc,
              sfType = "ratio",
              modelMatrixType = "standard")
 
-res_groups <- as.data.frame(results(dds,pAdjustMethod = "fdr"))
+res_groups <- as.data.frame(results(dds,pAdjustMethod = "bonferroni"))
 
 res_sort <- res_groups[order(res_groups$padj), ]
 
