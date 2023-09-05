@@ -154,6 +154,19 @@ ggsave(paste0(outputdir, "IHC_combined_plot.pdf"), plot = last_plot(),
 
 ```
 
+```{r}
+
+p16_pvals <- apply(IHC_staining$p16INK4A[,3:5], 2, function(x) wilcox.test(x[1:4], x[4:8], exact = FALSE, 
+                                     paired=FALSE, p.adjust = "bonferroni")$p.value) %>% as.data.frame()
+
+stc1_pvals <- apply(IHC_staining$STC1[,3:5], 2, function(x) wilcox.test(x[1:4], x[4:8], exact=FALSE,
+                                     paired=FALSE, p.adjust = "bonferroni")$p.value) %>% as.data.frame()
+
+c2cd4b_pvals <- apply(IHC_staining$C2CD4B[,3:5], 2, function(x) wilcox.test(x[1:4], x[4:8], exact=FALSE,
+                                     paired=FALSE, p.adjust = "bonferroni")$p.value) %>% as.data.frame()
+
+```
+
 
 ```{r}
 
@@ -178,6 +191,27 @@ ggsave(paste0(outputdir, "qPCR_combined_plot.pdf"), plot = last_plot(),
 
 ```
 
+```{r}
+
+aldh3a1_pvals <- apply(qPCR[qPCR$Target == "ALDH3A1",][4], 2, function(x) wilcox.test(x[1:10], x[10:20], exact = FALSE, 
+                                     paired=FALSE, p.adjust = "bonferroni")$p.value) %>% as.data.frame()
+
+eml5_pvals <- apply(qPCR[qPCR$Target == "EML5",][4], 2, function(x) wilcox.test(x[1:10], x[10:20], exact = FALSE, 
+                                     paired=FALSE, p.adjust = "bonferroni")$p.value) %>% as.data.frame()
+
+ppp1_pvals <- apply(qPCR[qPCR$Target == "PPP1R1B",][4], 2, function(x) wilcox.test(x[1:10], x[10:20], exact = FALSE, 
+                                     paired=FALSE, p.adjust = "bonferroni")$p.value) %>% as.data.frame()
+
+spag6_pvals <- apply(qPCR[qPCR$Target == "SPAG6",][4], 2, function(x) wilcox.test(x[1:10], x[10:20], exact = FALSE, 
+                                     paired=FALSE, p.adjust = "bonferroni")$p.value) %>% as.data.frame()
+
+stc1_pvals <- apply(qPCR[qPCR$Target == "STC1",][4], 2, function(x) wilcox.test(x[1:10], x[10:20], exact = FALSE, 
+                                     paired=FALSE, p.adjust = "bonferroni")$p.value) %>% as.data.frame()
+
+tbx15_pvals <- apply(qPCR[qPCR$Target == "TBX15",][4], 2, function(x) wilcox.test(x[1:10], x[10:20], exact = FALSE, 
+                                     paired=FALSE, p.adjust = "bonferroni")$p.value) %>% as.data.frame()
+
+```
 
 ```{r}
 
