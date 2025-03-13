@@ -1,0 +1,307 @@
+---
+title: 'Endo Ageing: beReady patients (age group vs receptivity status)'
+author: 'Darina Obukhova'
+date: "`r Sys.Date()`"
+output:
+  BiocStyle::html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+editor options:
+   chunk_output_type: console
+---
+
+```{r setuo, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, out.width = "100%", fig.align = 'center',
+                      message=FALSE, warning=FALSE)
+options(width = 1200)
+```
+
+```{r}
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(ggsci)
+library(polycor)
+```
+
+```{r}
+beready_pat <- read.csv2("~/projects/Endometrial_Ageing/BReady_patients_all.csv", header=T)
+
+#Bin into the age groups
+
+beready_pat <- beready_pat %>% 
+  mutate(
+    age_group = case_when(
+      Age <= 29 ~ "20s",
+      Age > 29 & Age <= 39 ~ "30s",
+      Age > 39 & Age <= 44 ~ "40s",
+      Age >= 45 ~ "45+"
+    ),
+    age_group = factor(
+      age_group,
+      level = c("20s", "30s", "40s", "45+")
+    )
+  )
+
+#Samples per group
+
+beready_pat %>% count(age_group)
+
+#Distribution of samples
+freq_table <- table(beready_pat$age_group, beready_pat$Reported)
+percentage_table <- prop.table(freq_table, margin = 1) * 100 
+percentage_df <- as.data.frame(percentage_table)
+colnames(percentage_df) <- c("age_group", "reported_status", "percentage")
+```
+
+```{r}
+# Create the plot
+dist <- ggplot(percentage_df, aes(x = age_group, y = percentage, fill = reported_status)) +
+  geom_bar(stat = "identity", position = "stack") +
+  labs(x = "Age group", y = "Percentage (%)", fill = "Receptivity status") +
+  scale_fill_aaas() +
+  theme(aspect.ratio = 1,
+        panel.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), 
+        axis.line.y = element_line(colour="black"),
+        axis.line.x = element_line(colour="black"),
+        axis.text.x = element_text(angle = 30, vjust = 0.5, size = 12),
+        axis.text.y = element_text(size = 10),
+        legend.position = "bottom", 
+        legend.spacing.y = unit(0.5, "cm"))
+dist
+
+ggsave("~/projects/Endometrial_Ageing/figures/beReady_stacked.pdf", 
+       device = "pdf", height = 10, width = 15, units = "cm")
+```
+
+```{r}
+recep <- ggplot(percentage_df, aes(x = reported_status, y = percentage, fill = age_group)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_manual(values = c("darkorchid4", "seagreen4", "blue4", "darkorange2")) +
+  labs(x = "Receptivity status", y = "Percentage (%)", fill = "Age group") +
+  theme(aspect.ratio = 0.5,
+        panel.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), 
+        axis.line.y = element_line(colour="black"),
+        axis.line.x = element_line(colour="black"),
+        axis.text.x = element_text(angle = 30, vjust = 0.5, size = 12),
+        axis.text.y = element_text(size = 10),
+        legend.position = "bottom", 
+        legend.spacing.y = unit(0.5, "cm"))
+
+recep
+
+ggsave("~/projects/Endometrial_Ageing/figures/beReady_stacked_recepstatus.pdf", 
+       device = "pdf", height = 10, width = 15, units = "cm")
+```
+
+Correlation between age group and receptivity status. As both of those variables are ordinal variable (ordinal scale assigns objects a name and arranges them in the order of their magnitude), we can try out polychoric correlation. It assumes that each ordinal data point comes from a normal distribution, and tries to estimate the correlation coefficient on that assumption.
+
+```{r}
+polychor(beready_pat$age_group, beready_pat$Reported, std.err=TRUE)
+```
+
+```{r}
+cor.test(as.numeric(unclass(beready_pat$age_group)),as.numeric(unclass(beready_pat$Reported)), method="kendall")
+```
+
+Alternative age groups
+
+```{r}
+
+#Bin into alternative age groups
+
+beready_pat <- beready_pat %>% 
+  mutate(
+    age_group_alt = case_when(
+      Age <= 28 ~ "21-28",
+      Age >= 29 & Age <= 36 ~ "29-36",
+      Age >= 37 & Age <= 44 ~ "37-44",
+      Age >= 45 ~ "45+"
+    ),
+    age_group_alt = factor(
+      age_group_alt,
+      level = c("21-28", "29-36", "37-44", "45+")
+    )
+  )
+
+#Samples per group
+
+beready_pat %>% count(age_group_alt)
+
+#Distribution of samples
+freq_table <- table(beready_pat$age_group_alt, beready_pat$Reported)
+percentage_table <- prop.table(freq_table, margin = 1) * 100 
+percentage_df <- as.data.frame(percentage_table)
+colnames(percentage_df) <- c("age_group", "reported_status", "percentage")
+```
+
+```{r}
+dist_alt <- ggplot(percentage_df, aes(x = age_group, y = percentage, fill = reported_status)) +
+  geom_bar(stat = "identity", position = "stack") +
+  labs(x = "Age group", y = "Percentage (%)", fill = "Receptivity status") +
+  scale_fill_aaas() +
+  theme(aspect.ratio = 1,
+        panel.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), 
+        axis.line.y = element_line(colour="black"),
+        axis.line.x = element_line(colour="black"),
+        axis.text.x = element_text(angle = 30, vjust = 0.5, size = 12),
+        axis.text.y = element_text(size = 10),
+        legend.position = "bottom", 
+        legend.spacing.y = unit(0.1, "cm")) 
+dist_alt
+
+ggsave("~/projects/Endometrial_Ageing/figures/beReady_stacked_altgroups.pdf", 
+       device = "pdf", height = 10, width = 15, units = "cm")
+
+```
+
+```{r}
+
+recep_alt  <- ggplot(percentage_df, aes(x = reported_status, y = percentage, fill = age_group)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  scale_fill_manual(values = c("darkorchid4", "seagreen4", "blue4", "darkorange2")) +
+  labs(x = "Receptivity status", y = "Percentage (%)", fill = "Age group") +
+  theme(aspect.ratio = 0.5,
+        panel.background = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), 
+        axis.line.y = element_line(colour="black"),
+        axis.line.x = element_line(colour="black"),
+        axis.text.x = element_text(angle = 30, vjust = 0.5, size = 12),
+        axis.text.y = element_text(size = 10),
+        legend.position = "bottom", 
+        legend.spacing.y = unit(0.5, "cm"))
+
+recep_alt
+
+ggsave("~/projects/Endometrial_Ageing/figures/beReady_stacked_recepstatus_altgroups.pdf", device = "pdf", height = 10, width = 15, units = "cm")
+  
+```
+
+```{r}
+polychor(beready_pat$age_group_alt, beready_pat$Reported, std.err=TRUE)
+```
+
+```{r}
+cor.test(as.numeric(unclass(beready_pat$age_group_alt)),as.numeric(unclass(beready_pat$Reported)), method="kendall")
+```
+
+Does occurrence of specific receptivity status increases as age increases?
+
+###Pre-receptive
+```{r}
+
+beready_pat_pr <- beready_pat[beready_pat$Reported == "pre-receptive", ]
+cases <- as.vector(table(beready_pat_pr$age_group, beready_pat_pr$Reported))
+total <- as.vector(table(beready_pat$age_group))
+names(cases) <- names(table(beready_pat$age_group))
+names(total) <- names(table(beready_pat$age_group))
+prop.test(cases, total)
+
+prop.trend.test(cases, total)
+
+```
+###Early receptive
+
+```{r}
+
+beready_pat_er <- beready_pat[beready_pat$Reported == "early-receptive", ]
+cases <- as.vector(table(beready_pat_er$age_group, beready_pat_er$Reported))
+total <- as.vector(table(beready_pat$age_group))
+names(cases) <- names(table(beready_pat$age_group))
+names(total) <- names(table(beready_pat$age_group))
+prop.test(cases, total)
+
+prop.trend.test(cases, total)
+```
+
+###Receptive
+```{r}
+beready_pat_r <- beready_pat[beready_pat$Reported == "receptive", ]
+cases <- as.vector(table(beready_pat_r$age_group, beready_pat_r$Reported))
+total <- as.vector(table(beready_pat$age_group))
+names(cases) <- names(table(beready_pat$age_group))
+names(total) <- names(table(beready_pat$age_group))
+prop.test(cases, total)
+
+prop.trend.test(cases, total)
+```
+
+###Late receptive
+```{r}
+beready_pat_lr <- beready_pat[beready_pat$Reported == "late-receptive", ]
+cases <- as.vector(table(beready_pat_lr$age_group, beready_pat_lr$Reported))
+total <- as.vector(table(beready_pat$age_group))
+names(cases) <- names(table(beready_pat$age_group))
+names(total) <- names(table(beready_pat$age_group))
+prop.test(cases, total)
+
+prop.trend.test(cases, total)
+```
+###Post-receptive
+
+```{r}
+beready_pat_pr <- beready_pat[beready_pat$Reported == "post-receptive", ]
+cases <- as.vector(table(beready_pat_pr$age_group, beready_pat_pr$Reported))
+total <- as.vector(table(beready_pat$age_group))
+names(cases) <- names(table(beready_pat$age_group))
+names(total) <- names(table(beready_pat$age_group))
+prop.test(cases, total)
+
+prop.trend.test(cases, total)
+
+```
+
+```{r}
+
+beready_pat_pr <- beready_pat[beready_pat$Reported == "receptive", ]
+cases <- as.vector(table(beready_pat_pr$age_group_alt, beready_pat_pr$Reported))
+total <- as.vector(table(beready_pat$age_group_alt))
+names(cases) <- names(table(beready_pat$age_group_alt))
+names(total) <- names(table(beready_pat$age_group_alt))
+prop.test(cases, total)
+
+prop.trend.test(cases, total)
+
+```
+
+
+```{r}
+actub <- read.csv2("~/projects/Endometrial_Ageing/Ac-Tub-a_per_LE_area.csv", header=T)
+
+actub_df <- data.frame(
+  value=c(actub$YMA, actub$AMA),
+  group=factor(rep(c("YMA", "AMA"), each = 8))
+)
+
+actub_df$group <- factor(actub_df$group, levels=c('YMA', 'AMA'))
+
+actub_markers_plt <- ggplot(data = actub_df , aes(x=group, y = value, fill=group))+
+  stat_boxplot(geom = 'errorbar', width = 0.6) +
+  geom_boxplot(width = 0.6) +
+  labs(x=NULL, y="AcTubA stained MCC cells per LE") +
+  scale_fill_manual(values = c("darkorchid4", "darkorange2"))+
+  geom_jitter(width=0.25, alpha = 0.2) +
+  theme_bw() +
+  theme(aspect.ratio = 1.5,
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        legend.title = element_blank())
+  
+actub_markers_plt 
+
+ggsave("~/projects/Endometrial_Ageing/figures/actub_mcc_le.pdf", plot = last_plot(), dpi = 1000)
+```
+
+```{r}
+actub_pvals <- apply(actub_df[1], 2, function(x) t.test(x[1:8], x[8:16], exact = FALSE, paired=FALSE, p.adjust = "bonferroni")$p.value) 
+```
